@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Lock, Truck, Check, Banknote, CreditCard, Smartphone, Building2 } from 'lucide-react';
+import { Lock, Check, Banknote, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { cartService, couponService } from '../api/backendServices';
 import { createOrder } from '../services/orderService';
 import RazorpayCheckout from '../components/RazorpayCheckout';
 import { useAuthContext } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import STATES_AND_CITIES from '../data/statesAndCities.json';
 
 const PAYMENT_OPTIONS = [
   { id: 'online',     label: 'Pay Online',         sub: 'Card / UPI / Net Banking via Razorpay', icon: CreditCard },
@@ -19,6 +20,7 @@ const COD_MAX      = 5000; // max order value for COD
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const { clearCart } = useCart();
 
   const [currentStep,    setCurrentStep]    = useState(1);
   const [cartItems,      setCartItems]      = useState([]);
@@ -29,22 +31,12 @@ const CheckoutPage = () => {
 
   // Shipping
   const [shippingData, setShippingData] = useState({
-    fullName: '', phoneNumber: '', email: user?.Email || user?.email || '',
+    fullName: user?.Name || user?.name || '',
+    phoneNumber: user?.MobileNumber || user?.phone || '',
+    email: user?.Email || user?.email || '',
     address: '', city: '', state: '', zipCode: '',
   });
   const [shippingErrors, setShippingErrors] = useState({});
-
-  // Pre-fill from user
-  useEffect(() => {
-    if (user) {
-      setShippingData(prev => ({
-        ...prev,
-        fullName:    prev.fullName    || user.Name    || user.name    || '',
-        phoneNumber: prev.phoneNumber || user.MobileNumber || user.phone || '',
-        email:       user.Email || user.email || '',
-      }));
-    }
-  }, [user]);
 
   // Shipping method (delivery option id)
   const [deliveryOptions, setDeliveryOptions] = useState([]);
@@ -54,19 +46,11 @@ const CheckoutPage = () => {
   const [couponCode,     setCouponCode]     = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponApplied,  setCouponApplied]  = useState(false);
-  const [couponData,     setCouponData]     = useState(null);
 
   // Payment
   const [paymentMethod, setPaymentMethod] = useState('online');
 
-  // ── Auth guard ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!user) { navigate('/login'); return; }
-    loadCart();
-    loadDeliveryOptions();
-  }, [user, navigate]); // eslint-disable-line
-
-  const loadDeliveryOptions = async () => {
+  async function loadDeliveryOptions() {
     try {
       const opts = await (await import('../api/backendServices')).deliveryService.getAll();
       setDeliveryOptions(opts || []);
@@ -74,9 +58,9 @@ const CheckoutPage = () => {
     } catch (err) {
       console.error('Failed to load delivery options', err);
     }
-  };
+  }
 
-  const loadCart = async () => {
+  async function loadCart() {
     try {
       setLoading(true);
       const items = await cartService.get();
@@ -99,23 +83,27 @@ const CheckoutPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  // ── Auth guard ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) { navigate('/login'); return; }
+    const timer = setTimeout(() => {
+      loadCart();
+      loadDeliveryOptions();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [user, navigate]); // eslint-disable-line
 
   // ── Calculations ────────────────────────────────────────────────────────────
   const subtotal     = cartItems.reduce((s, i) => s + i.Price * i.Quantity, 0);
   const selectedOption = deliveryOptions.find(o => String(o.id) === String(shippingMethod));
   const shippingCost = selectedOption ? (selectedOption.price || 0) : (subtotal >= 999 ? 0 : 99);
-  const codFee       = paymentMethod === 'cod' ? COD_FEE : 0;
+  const codAvailable = subtotal <= COD_MAX;
+  const effectivePaymentMethod = paymentMethod === 'cod' && !codAvailable ? 'online' : paymentMethod;
+  const codFee       = effectivePaymentMethod === 'cod' ? COD_FEE : 0;
   const gst          = Math.round((subtotal + shippingCost) * 0.18 * 100) / 100;
   const total        = Math.max(0, subtotal + shippingCost + gst + codFee - couponDiscount);
-  const codAvailable = subtotal <= COD_MAX;
-
-  useEffect(() => {
-    if (!codAvailable && paymentMethod === 'cod') {
-      setPaymentMethod('online');
-      toast(`COD is only available for orders up to ₹${COD_MAX}. Switched to online payment.`);
-    }
-  }, [codAvailable, paymentMethod]);
 
   // ── Validation ──────────────────────────────────────────────────────────────
   const validateShipping = () => {
@@ -146,7 +134,6 @@ const CheckoutPage = () => {
         : result.discount_value;
       setCouponDiscount(discount);
       setCouponApplied(true);
-      setCouponData(result);
       toast.success(`Coupon applied! You save ₹${discount.toFixed(2)}`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid coupon code');
@@ -154,7 +141,7 @@ const CheckoutPage = () => {
   };
 
   const handleRemoveCoupon = () => {
-    setCouponCode(''); setCouponDiscount(0); setCouponApplied(false); setCouponData(null);
+    setCouponCode(''); setCouponDiscount(0); setCouponApplied(false);
   };
 
   // ── Continue step 1 with validation ─────────────────────────────────────────
@@ -165,12 +152,6 @@ const CheckoutPage = () => {
   // ── Place Order ─────────────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
     if (!validateShipping()) { setCurrentStep(1); return; }
-
-    // COD availability check
-    if (paymentMethod === 'cod' && !codAvailable) {
-      toast.error(`COD is only available for orders up to ₹${COD_MAX}`);
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -183,7 +164,7 @@ const CheckoutPage = () => {
       const order = await createOrder({
         items,
         totalAmount:     total,
-        paymentMethod:   paymentMethod, // 'online' | 'cod'
+        paymentMethod:   effectivePaymentMethod, // 'online' | 'cod'
         shippingAddress: {
           name:    shippingData.fullName,
           phone:   shippingData.phoneNumber,
@@ -199,9 +180,9 @@ const CheckoutPage = () => {
       const ordId = order?.OrderId || order?.id;
       if (!ordId) throw new Error('No order ID returned');
 
-      if (paymentMethod === 'cod') {
+      if (effectivePaymentMethod === 'cod') {
         // COD — no payment gateway, order is already created
-        await cartService.clear().catch(() => {});
+        await clearCart().catch(() => {});
         toast.success('Order placed! Pay on delivery.');
         navigate(`/order-confirmation/${ordId}`);
       } else {
@@ -218,7 +199,9 @@ const CheckoutPage = () => {
   };
 
   const handlePaymentSuccess = async () => {
-    await cartService.clear().catch(() => {});
+    await clearCart().catch(() => {});
+    setShowRazorpay(false);
+    setCartItems([]);
     toast.success('Payment successful! Order confirmed.');
     navigate(`/order-confirmation/${createdOrderId}`);
   };
@@ -243,8 +226,24 @@ const CheckoutPage = () => {
     <div className="min-h-screen py-8 md:py-12" style={{ background: 'var(--color-cream-100)' }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Heading */}
+        {/* Heading with Mobile Logo */}
         <div className="mb-8">
+          {/* Mobile Header with Logo */}
+          <div className="md:hidden mb-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ background: 'var(--color-brand-600)', color: 'white' }}>
+                <span className="font-display font-black text-lg">AJ</span>
+              </div>
+              <h1 className="font-display font-black text-2xl" style={{ color: 'var(--color-ink)' }}>
+                Adaah Jewels
+              </h1>
+            </div>
+            <p className="text-xs italic" style={{ color: 'var(--color-ink-muted)' }}>
+              Timeless Elegance, Modern Grace
+            </p>
+          </div>
+
           <h1 className="font-display font-black text-3xl md:text-4xl mb-1"
             style={{ color: 'var(--color-ink)' }}>Checkout</h1>
           <p className="text-sm" style={{ color: 'var(--color-ink-muted)' }}>
@@ -314,23 +313,53 @@ const CheckoutPage = () => {
                     onChange={handleShippingChange} placeholder="123, Main Street, Apartment 4B"
                     className="input-premium w-full" />
                 </Field>
-                <div className="grid grid-cols-3 gap-3">
-                  <Field label="City" required error={shippingErrors.city}>
-                    <input name="city" value={shippingData.city}
-                      onChange={handleShippingChange} placeholder="Mumbai"
-                      className="input-premium w-full" />
-                  </Field>
+                <div className="grid grid-cols-2 gap-3">
                   <Field label="State" required error={shippingErrors.state}>
-                    <input name="state" value={shippingData.state}
-                      onChange={handleShippingChange} placeholder="Maharashtra"
-                      className="input-premium w-full" />
+                    <div className="relative">
+                      <select name="state" value={shippingData.state}
+                        onChange={(e) => {
+                          handleShippingChange(e);
+                          setShippingData(prev => ({ ...prev, city: '' }));
+                        }}
+                        className="input-premium w-full appearance-none pr-10 cursor-pointer"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          paddingRight: '2.5rem',
+                        }}>
+                        <option value="">Select State</option>
+                        {Object.keys(STATES_AND_CITIES).sort().map(state => (
+                          <option key={state} value={state}>{state}</option>
+                        ))}
+                      </select>
+                    </div>
                   </Field>
-                  <Field label="Pincode" required error={shippingErrors.zipCode}>
-                    <input name="zipCode" value={shippingData.zipCode}
-                      onChange={handleShippingChange} placeholder="400001"
-                      className="input-premium w-full" />
+                  <Field label="City" required error={shippingErrors.city}>
+                    <div className="relative">
+                      <select name="city" value={shippingData.city}
+                        onChange={handleShippingChange}
+                        disabled={!shippingData.state}
+                        className="input-premium w-full appearance-none pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          paddingRight: '2.5rem',
+                        }}>
+                        <option value="">Select City</option>
+                        {shippingData.state && STATES_AND_CITIES[shippingData.state]?.map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                    </div>
                   </Field>
                 </div>
+                <Field label="Pincode" required error={shippingErrors.zipCode}>
+                  <input name="zipCode" value={shippingData.zipCode}
+                    onChange={handleShippingChange} placeholder="400001"
+                    className="input-premium w-full" />
+                </Field>
                 <button onClick={handleContinueShipping}
                   className="btn-primary w-full justify-center mt-2">
                   Continue to Delivery →
@@ -385,18 +414,19 @@ const CheckoutPage = () => {
                   {PAYMENT_OPTIONS.map(opt => {
                     const Icon = opt.icon;
                     const disabled = opt.id === 'cod' && !codAvailable;
+                    const selected = effectivePaymentMethod === opt.id;
                     return (
                       <label key={opt.id}
                         className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all ${
                           disabled
                             ? 'opacity-40 cursor-not-allowed border-neutral-100'
-                            : paymentMethod === opt.id
+                            : selected
                               ? 'border-brand-500 bg-brand-50 cursor-pointer'
                               : 'border-neutral-200 hover:border-brand-300 cursor-pointer'
                         }`}>
-                        <RadioDot checked={paymentMethod === opt.id && !disabled} />
+                        <RadioDot checked={selected && !disabled} />
                         <input type="radio" name="payment" value={opt.id}
-                          checked={paymentMethod === opt.id}
+                          checked={selected}
                           disabled={disabled}
                           onChange={() => !disabled && setPaymentMethod(opt.id)}
                           className="sr-only" />
@@ -405,7 +435,7 @@ const CheckoutPage = () => {
                         <div className="flex-1">
                           <p className="font-semibold text-sm" style={{ color: 'var(--color-ink)' }}>
                             {opt.label}
-                            {opt.id === 'cod' && codFee > 0 && paymentMethod === 'cod' && (
+                            {opt.id === 'cod' && codFee > 0 && effectivePaymentMethod === 'cod' && (
                               <span className="ml-2 text-xs font-normal"
                                 style={{ color: 'var(--color-ink-muted)' }}>
                                 (+₹{COD_FEE} COD fee)
@@ -421,7 +451,7 @@ const CheckoutPage = () => {
                   })}
                 </div>
 
-                {paymentMethod === 'cod' && (
+                {effectivePaymentMethod === 'cod' && (
                   <div className="p-3 rounded-xl mb-4 text-sm"
                     style={{ background: '#FFF8E1', border: '1px solid #F5E199', color: '#7A5800' }}>
                     💡 Cash on Delivery — please keep exact change ready. Our delivery partner will collect payment at your door.
@@ -444,7 +474,7 @@ const CheckoutPage = () => {
                 >
                   {submitting
                     ? 'Placing Order…'
-                    : paymentMethod === 'cod'
+                    : effectivePaymentMethod === 'cod'
                       ? `Place Order — Pay ₹${total.toFixed(0)} on Delivery`
                       : `Pay ₹${total.toFixed(0)} Securely`}
                 </button>
@@ -496,15 +526,15 @@ const CheckoutPage = () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between px-3 py-2 rounded-xl text-sm"
-                    style={{ background: '#E8F5EE', border: '1px solid #B2DFCA' }}>
+                    style={{ background: '#E8F5EE', border: '1px solid #9FD3B8' }}>
                     <div>
-                      <span className="font-bold" style={{ color: '#2E7D32' }}>{couponCode}</span>
-                      <span className="ml-2 text-xs" style={{ color: '#388E3C' }}>
+                      <span className="font-bold px-2 py-0.5 rounded-md" style={{ color: '#145A1F', background: '#D2EFDE' }}>{couponCode}</span>
+                      <span className="ml-2 text-xs font-semibold" style={{ color: '#1B5E20' }}>
                         −₹{couponDiscount.toFixed(0)} off
                       </span>
                     </div>
                     <button onClick={handleRemoveCoupon}
-                      className="text-xs font-semibold" style={{ color: '#388E3C' }}>✕</button>
+                      className="text-xs font-bold" style={{ color: '#1B5E20' }}>✕</button>
                   </div>
                 )}
               </div>
@@ -532,7 +562,7 @@ const CheckoutPage = () => {
                   style={{ color: 'var(--color-brand-700)' }}>₹{total.toFixed(0)}</span>
               </div>
 
-              {paymentMethod === 'cod' && (
+              {effectivePaymentMethod === 'cod' && (
                 <p className="mt-3 text-xs text-center font-medium"
                   style={{ color: 'var(--color-ink-muted)' }}>
                   💰 Pay on Delivery

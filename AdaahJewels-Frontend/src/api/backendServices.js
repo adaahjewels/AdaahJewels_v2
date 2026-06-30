@@ -292,16 +292,27 @@ export const orderService = {
    * Returns PDF as blob.
    */
   downloadInvoice: async (orderId) => {
-    const response = await api.get(`/orders/${orderId}/invoice`, {
-      responseType: 'blob',
-    });
-    // Create download link
-    const url    = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-    const link   = document.createElement('a');
-    link.href    = url;
-    link.download = `invoice-${orderId}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const response = await api.get(`/orders/${orderId}/invoice`, {
+        responseType: 'blob',
+      });
+      
+      if (!response.data || response.data.size === 0) {
+        throw new Error('Invoice generation failed: Empty response');
+      }
+
+      // Create download link
+      const url    = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link   = document.createElement('a');
+      link.href    = url;
+      link.download = `invoice-${orderId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      return { success: true, message: 'Invoice downloaded successfully' };
+    } catch (error) {
+      console.error('Download invoice error:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Failed to download invoice');
+    }
   },
 
   /**
@@ -309,8 +320,16 @@ export const orderService = {
    * Backend generates PDF and emails it to the customer.
    */
   sendInvoiceByEmail: async (orderId) => {
-    const { data } = await api.post(`/orders/${orderId}/send-invoice`);
-    return data;
+    try {
+      const { data } = await api.post(`/orders/${orderId}/send-invoice`);
+      if (!data) {
+        throw new Error('No response from server');
+      }
+      return data;
+    } catch (error) {
+      console.error('Send invoice error:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Failed to send invoice email');
+    }
   },
 };
 

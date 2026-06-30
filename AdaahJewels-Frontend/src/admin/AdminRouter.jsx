@@ -10,6 +10,8 @@ const Orders = lazy(() => import('./pages/Orders'));
 const Customers = lazy(() => import('./pages/Customers'));
 const Coupons = lazy(() => import('./pages/Coupons'));
 const Banners = lazy(() => import('./pages/Banners'));
+const Testimonials = lazy(() => import('./pages/Testimonials'));
+const Reports = lazy(() => import('./pages/Reports'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 
 const Fallback = <LoadingSpinner fullScreen />;
@@ -53,11 +55,11 @@ export const AdminRouter = () => (
     <Route path="/customers"   element={guard(Customers)} />
     <Route path="/coupons"     element={guard(Coupons)} />
     <Route path="/banners"     element={guard(Banners)} />
+    <Route path="/testimonials" element={guard(Testimonials)} />
+    <Route path="/reports"      element={guard(Reports)} />
 
     {/* Future phases */}
-    <Route path="/testimonials" element={guard(() => <Soon title="Testimonials" />)} />
     <Route path="/inventory"    element={guard(() => <Soon title="Inventory" />)} />
-    <Route path="/reports"      element={guard(() => <Soon title="Reports & Analytics" />)} />
     <Route path="/settings"     element={guard(() => <Soon title="Settings" />)} />
 
     <Route path="/" element={<Navigate to="/admin/login" replace />} />

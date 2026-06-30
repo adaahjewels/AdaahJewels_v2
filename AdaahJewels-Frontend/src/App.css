@@ -5,20 +5,40 @@
 
   /* ── Cart drawer slide-in animation ────────────────────── */
   @keyframes slide-in-right {
-    from { transform: translateX(100%); }
-    to   { transform: translateX(0); }
+    from {
+      transform: translateX(100%);
+    }
+
+    to {
+      transform: translateX(0);
+    }
   }
+
   .animate-slide-in {
     animation: slide-in-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* ── Add-to-cart bounce on cart icon ────────────────────── */
   @keyframes bounce-brand {
-    0%, 100% { transform: scale(1); }
-    30%       { transform: scale(1.35); }
-    60%       { transform: scale(0.88); }
-    80%       { transform: scale(1.12); }
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    30% {
+      transform: scale(1.35);
+    }
+
+    60% {
+      transform: scale(0.88);
+    }
+
+    80% {
+      transform: scale(1.12);
+    }
   }
+
   .animate-bounce-brand {
     animation: bounce-brand 0.5s ease;
   }
@@ -36,6 +56,7 @@
     text-align: center;
     margin-bottom: 3rem;
   }
+
   .section-heading::after {
     content: '';
     display: block;
@@ -59,17 +80,27 @@
 
   /* ── Hero gradient overlay ──────────────────────────────── */
   .hero-overlay {
-    background: linear-gradient(
-      135deg,
-      rgba(46, 56, 39, 0.82) 0%,
-      rgba(88, 99, 72, 0.45) 60%,
-      rgba(201, 169, 110, 0.20) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba(46, 56, 39, 0.82) 0%,
+        rgba(88, 99, 72, 0.45) 60%,
+        rgba(201, 169, 110, 0.20) 100%);
   }
 
   /* ── Premium section background variants ────────────────── */
-  .section-light  { background-color: var(--color-cream-100); }
-  .section-warm   { background-color: var(--color-brand-50); }
-  .section-dark   { background-color: var(--color-brand-900); color: var(--color-ink-inverted); }
-  .section-gold   { background: linear-gradient(135deg, var(--color-gold-50), var(--color-cream-100)); }
+  .section-light {
+    background-color: var(--color-cream-100);
+  }
+
+  .section-warm {
+    background-color: var(--color-brand-50);
+  }
+
+  .section-dark {
+    background-color: var(--color-brand-900);
+    color: var(--color-ink-inverted);
+  }
+
+  .section-gold {
+    background: linear-gradient(135deg, var(--color-gold-50), var(--color-cream-100));
+  }
 }

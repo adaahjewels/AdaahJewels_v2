@@ -31,6 +31,8 @@ const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'));
 const ChangePassword   = lazy(() => import('./pages/ChangePassword'));
 const VerifyOTP        = lazy(() => import('./pages/VerifyOTP'));
 const Profile          = lazy(() => import('./pages/Profile'));
+const PrivacyPolicy    = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 
 const AUTH_PATHS = ['/login', '/register', '/email-verification', '/forgot-password', '/verify-otp', '/admin'];
 const isAuthPath = (path) => AUTH_PATHS.some(p => path.startsWith(p));
@@ -52,6 +54,10 @@ function AppInner() {
   const location = useLocation();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const hideChrome = isAuthPath(location.pathname);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleOpenCart = () => setIsCartOpen(true);
@@ -82,6 +88,8 @@ function AppInner() {
             <Route path="/products"     element={<ProductList />} />
             <Route path="/shop"         element={<ProductList />} />
             <Route path="/product/:id"  element={<ProductDetail />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-conditions" element={<TermsAndConditions />} />
 
             {/* Protected Routes */}
             <Route path="/wishlist"   element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />

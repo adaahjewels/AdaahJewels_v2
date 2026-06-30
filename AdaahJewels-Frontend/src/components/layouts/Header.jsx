@@ -62,17 +62,17 @@ const Header = () => {
         <div className="flex items-center justify-between py-2.5">
 
           {/* ── Logo ───────────────────────────────────────── */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+          <Link to="/" className="flex items-center gap-2 min-w-0 flex-1 md:flex-none">
             <img
               src="/LOGO%20(2).jpg"
               alt="Adaah Jewels"
               style={{ height: '48px', width: 'auto', objectFit: 'contain', display: 'block', borderRadius: '6px' }}
             />
-            <div className="hidden sm:block leading-tight">
-              <p className="font-display font-black text-sm" style={{ color: 'var(--color-brand-800)' }}>
+            <div className="leading-tight min-w-0">
+              <p className="font-display font-black text-[12px] sm:text-sm truncate" style={{ color: 'var(--color-brand-800)' }}>
                 Adaah Jewels
               </p>
-              <p className="text-[10px] tracking-wide" style={{ color: 'var(--color-brand-500)' }}>
+              <p className="text-[9px] sm:text-[10px] tracking-wide truncate" style={{ color: 'var(--color-brand-500)' }}>
                 Elegance in Every Thread
               </p>
             </div>

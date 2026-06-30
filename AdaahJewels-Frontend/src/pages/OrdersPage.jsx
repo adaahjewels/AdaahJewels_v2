@@ -12,6 +12,7 @@ const OrdersPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState(null);
 
   useEffect(() => {
     loadOrders();
@@ -47,18 +48,33 @@ const OrdersPage = () => {
 
   const handleDownloadInvoice = async (orderId) => {
     try {
-      await downloadInvoice(orderId);
-    } catch {
-      toast.error('Failed to download invoice');
+      setInvoiceLoading(orderId);
+      const result = await downloadInvoice(orderId);
+      if (result?.success) {
+        toast.success('Invoice downloaded successfully');
+      }
+    } catch (error) {
+      console.error('Invoice download error:', error);
+      toast.error(error.message || 'Failed to download invoice');
+    } finally {
+      setInvoiceLoading(null);
     }
   };
 
   const handleEmailInvoice = async (orderId) => {
     try {
-      await sendInvoiceByEmail(orderId);
-      toast.success('Invoice sent to your email!');
-    } catch {
-      toast.error('Failed to send invoice email');
+      setInvoiceLoading(`email-${orderId}`);
+      const result = await sendInvoiceByEmail(orderId);
+      if (result?.message) {
+        toast.success(result.message);
+      } else {
+        toast.success('Invoice sent to your email!');
+      }
+    } catch (error) {
+      console.error('Invoice email error:', error);
+      toast.error(error.message || 'Failed to send invoice email');
+    } finally {
+      setInvoiceLoading(null);
     }
   };
 
@@ -195,11 +211,33 @@ const OrdersPage = () => {
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleViewDetails(order)} className="rounded-lg p-2 text-gold-600 transition hover:bg-gold-50" title="View details">
                             <Eye className="h-4 w-4" />
                           </motion.button>
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDownloadInvoice(order.OrderId)} className="rounded-lg p-2 text-charcoal-700 transition hover:bg-cream-100" title="Download invoice">
-                            <Download className="h-4 w-4" />
+                          <motion.button 
+                            whileHover={{ scale: invoiceLoading === order.OrderId ? 1 : 1.05 }} 
+                            whileTap={{ scale: 0.95 }} 
+                            onClick={() => handleDownloadInvoice(order.OrderId)} 
+                            disabled={invoiceLoading !== null}
+                            className={`rounded-lg p-2 transition ${invoiceLoading === order.OrderId ? 'opacity-50 cursor-not-allowed' : 'text-charcoal-700 hover:bg-cream-100'}`}
+                            title="Download invoice"
+                          >
+                            {invoiceLoading === order.OrderId ? (
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="h-4 w-4 border-2 border-charcoal-300 border-t-charcoal-700 rounded-full" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
                           </motion.button>
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleEmailInvoice(order.OrderId)} className="rounded-lg p-2 text-success-600 transition hover:bg-success-50" title="Email invoice">
-                            <Mail className="h-4 w-4" />
+                          <motion.button 
+                            whileHover={{ scale: invoiceLoading === `email-${order.OrderId}` ? 1 : 1.05 }} 
+                            whileTap={{ scale: 0.95 }} 
+                            onClick={() => handleEmailInvoice(order.OrderId)} 
+                            disabled={invoiceLoading !== null}
+                            className={`rounded-lg p-2 transition ${invoiceLoading === `email-${order.OrderId}` ? 'opacity-50 cursor-not-allowed' : 'text-success-600 hover:bg-success-50'}`}
+                            title="Email invoice"
+                          >
+                            {invoiceLoading === `email-${order.OrderId}` ? (
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="h-4 w-4 border-2 border-success-300 border-t-success-600 rounded-full" />
+                            ) : (
+                              <Mail className="h-4 w-4" />
+                            )}
                           </motion.button>
                           {order.Status?.toLowerCase() === 'pending' && (
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDeleteOrder(order.OrderId)} className="rounded-lg p-2 text-error-600 transition hover:bg-error-50" title="Cancel order">

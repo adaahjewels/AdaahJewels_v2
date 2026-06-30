@@ -99,8 +99,8 @@ const Footer = () => {
             <ul className="space-y-2.5 text-sm">
               {[
                 { to: '/shipping', label: 'Shipping Policy' },
-                { to: '/privacy',  label: 'Privacy Policy' },
-                { to: '/terms',    label: 'Terms & Conditions' },
+                { to: '/privacy-policy',  label: 'Privacy Policy' },
+                { to: '/terms-conditions',    label: 'Terms & Conditions' },
               ].map(({ to, label }) => (
                 <li key={to}>
                   <Link

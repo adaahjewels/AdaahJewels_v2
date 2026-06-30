@@ -3,6 +3,7 @@ import { Edit2, Trash2, Search, X, Plus, Image as ImageIcon } from 'lucide-react
 import AdminLayout from '../layouts/AdminLayout';
 import toast from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
+import ImageUploadField from '../components/ui/ImageUploadField';
 
 const POSITIONS = ['hero', 'sidebar', 'footer', 'category'];
 
@@ -227,21 +228,20 @@ const Banners = () => {
                 {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
               </div>
 
-              {/* Image URL */}
-              <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  Image URL <span className="text-red-500">*</span>
-                </label>
-                <input name="imageUrl" value={formData.imageUrl} onChange={handleChange}
-                  placeholder="https://…"
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 ${formErrors.imageUrl ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                {formErrors.imageUrl && <p className="text-red-500 text-xs mt-1">{formErrors.imageUrl}</p>}
-                {formData.imageUrl && (
-                  <img src={formData.imageUrl} alt="preview"
-                    className="mt-2 w-full h-28 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
-                    onError={e => { e.target.style.display = 'none'; }} />
-                )}
-              </div>
+              {/* Image */}
+              <ImageUploadField
+                label="Banner Image"
+                required
+                value={formData.imageUrl}
+                onChange={(url) => {
+                  setFormData(prev => ({ ...prev, imageUrl: url }));
+                  if (formErrors.imageUrl) {
+                    setFormErrors(prev => ({ ...prev, imageUrl: '' }));
+                  }
+                }}
+                error={formErrors.imageUrl}
+                previewClass="w-full h-28"
+              />
 
               {/* Link */}
               <div>

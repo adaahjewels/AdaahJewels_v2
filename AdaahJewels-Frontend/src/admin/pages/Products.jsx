@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, Search, X } from 'lucide-react';
 import AdminLayout from '../layouts/AdminLayout';
 import toast from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
+import ImageUploadField from '../components/ui/ImageUploadField';
 
 const MATERIALS = ['Gold', 'Silver', 'Platinum', 'Diamond', 'Kundan', 'Oxidised', 'Artificial'];
 
@@ -380,6 +381,14 @@ const Products = () => {
                 {/* Images */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Product Images (URLs)</label>
+                  <div className="mb-3">
+                    <ImageUploadField
+                      label="Upload Image or Paste URL"
+                      value={formData.imageInput}
+                      onChange={(url) => setFormData(prev => ({ ...prev, imageInput: url }))}
+                      previewClass="w-full h-24"
+                    />
+                  </div>
                   <div className="flex gap-2">
                     <input name="imageInput" value={formData.imageInput} onChange={handleChange}
                       placeholder="Paste image URL and click Add"

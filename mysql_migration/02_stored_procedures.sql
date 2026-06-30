@@ -8,6 +8,8 @@
 -- =============================================================================
 
 USE adaah_jewels_v2;
+SET SESSION CHARACTER SET utf8mb4;
+SET SESSION COLLATION_CONNECTION = utf8mb4_unicode_ci;
 DELIMITER $$
 
 -- =============================================================================
@@ -16,12 +18,13 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS sp_create_user $$
 CREATE PROCEDURE sp_create_user(
-  IN p_name     VARCHAR(255),
-  IN p_email    VARCHAR(255),
-  IN p_phone    VARCHAR(20),
-  IN p_password VARCHAR(255),
+  IN p_name     VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_email    VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_phone    VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_password VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_role     ENUM('customer','admin')
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   INSERT INTO users (name, email, phone, password, role)
   VALUES (p_name, p_email, NULLIF(p_phone,''), p_password, p_role);
@@ -38,13 +41,15 @@ BEGIN
 END $$
 
 DROP PROCEDURE IF EXISTS sp_get_user_by_email $$
-CREATE PROCEDURE sp_get_user_by_email(IN p_email VARCHAR(255))
+CREATE PROCEDURE sp_get_user_by_email(IN p_email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT * FROM users WHERE email = p_email LIMIT 1;
 END $$
 
 DROP PROCEDURE IF EXISTS sp_get_user_by_email_or_phone $$
-CREATE PROCEDURE sp_get_user_by_email_or_phone(IN p_identifier VARCHAR(255))
+CREATE PROCEDURE sp_get_user_by_email_or_phone(IN p_identifier VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT * FROM users
   WHERE email = p_identifier OR phone = p_identifier
@@ -54,8 +59,9 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_user_refresh_token $$
 CREATE PROCEDURE sp_update_user_refresh_token(
   IN p_id    INT,
-  IN p_token TEXT
+  IN p_token TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE users SET refresh_token = p_token WHERE id = p_id;
 END $$
@@ -63,10 +69,11 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_user_profile $$
 CREATE PROCEDURE sp_update_user_profile(
   IN p_id    INT,
-  IN p_name  VARCHAR(255),
-  IN p_email VARCHAR(255),
-  IN p_phone VARCHAR(20)
+  IN p_name  VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_phone VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE users
   SET name  = COALESCE(NULLIF(p_name,''),  name),
@@ -79,8 +86,9 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_user_password $$
 CREATE PROCEDURE sp_update_user_password(
   IN p_id           INT,
-  IN p_new_password VARCHAR(255)
+  IN p_new_password VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE users
   SET password = p_new_password,
@@ -93,9 +101,10 @@ END $$
 DROP PROCEDURE IF EXISTS sp_set_reset_password_token $$
 CREATE PROCEDURE sp_set_reset_password_token(
   IN p_id      INT,
-  IN p_token   VARCHAR(255),
+  IN p_token   VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_expires DATETIME
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE users
   SET reset_password_token = p_token,
@@ -104,7 +113,8 @@ BEGIN
 END $$
 
 DROP PROCEDURE IF EXISTS sp_get_user_by_reset_token $$
-CREATE PROCEDURE sp_get_user_by_reset_token(IN p_token VARCHAR(255))
+CREATE PROCEDURE sp_get_user_by_reset_token(IN p_token VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT * FROM users
   WHERE reset_password_token = p_token
@@ -114,9 +124,10 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_check_email_exists_excluding $$
 CREATE PROCEDURE sp_check_email_exists_excluding(
-  IN p_email   VARCHAR(255),
+  IN p_email   VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_exclude INT
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT COUNT(*) AS cnt FROM users
   WHERE email = p_email AND id != p_exclude;
@@ -124,9 +135,10 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_check_phone_exists_excluding $$
 CREATE PROCEDURE sp_check_phone_exists_excluding(
-  IN p_phone   VARCHAR(20),
+  IN p_phone   VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_exclude INT
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT COUNT(*) AS cnt FROM users
   WHERE phone = p_phone AND id != p_exclude;
@@ -156,11 +168,12 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_create_category $$
 CREATE PROCEDURE sp_create_category(
-  IN p_name        VARCHAR(255),
-  IN p_slug        VARCHAR(255),
-  IN p_image_url   TEXT,
-  IN p_description TEXT
+  IN p_name        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_slug        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_image_url   TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   INSERT INTO categories (name, slug, parent_id, image_url, description)
   VALUES (p_name, p_slug, NULL, NULLIF(p_image_url,''), NULLIF(p_description,''));
@@ -196,12 +209,13 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_category $$
 CREATE PROCEDURE sp_update_category(
   IN p_id          INT,
-  IN p_name        VARCHAR(255),
-  IN p_slug        VARCHAR(255),
-  IN p_image_url   TEXT,
-  IN p_description TEXT,
+  IN p_name        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_slug        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_image_url   TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_is_active   TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE categories
   SET name        = p_name,
@@ -231,12 +245,13 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_create_subcategory $$
 CREATE PROCEDURE sp_create_subcategory(
-  IN p_name        VARCHAR(255),
-  IN p_slug        VARCHAR(255),
+  IN p_name        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_slug        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_parent_id   INT,
-  IN p_image_url   TEXT,
-  IN p_description TEXT
+  IN p_image_url   TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   INSERT INTO categories (name, slug, parent_id, image_url, description)
   VALUES (p_name, p_slug, p_parent_id, NULLIF(p_image_url,''), NULLIF(p_description,''));
@@ -285,13 +300,14 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_subcategory $$
 CREATE PROCEDURE sp_update_subcategory(
   IN p_id          INT,
-  IN p_name        VARCHAR(255),
-  IN p_slug        VARCHAR(255),
+  IN p_name        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_slug        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_parent_id   INT,
-  IN p_image_url   TEXT,
-  IN p_description TEXT,
+  IN p_image_url   TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_is_active   TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE categories
   SET name        = p_name,
@@ -340,16 +356,17 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_create_product $$
 CREATE PROCEDURE sp_create_product(
-  IN p_name              VARCHAR(255),
+  IN p_name              VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_category_id       INT,
-  IN p_material_type     VARCHAR(50),
+  IN p_material_type     VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_price             DECIMAL(10,2),
   IN p_discount          DECIMAL(5,2),
   IN p_delivery_days     INT,
-  IN p_description       TEXT,
-  IN p_care_instructions TEXT,
+  IN p_description       TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_care_instructions TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_stock             INT
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   INSERT INTO products (name, category_id, material_type, price, discount,
                         delivery_days, description, care_instructions, stock)
@@ -361,9 +378,10 @@ END $$
 DROP PROCEDURE IF EXISTS sp_add_product_image $$
 CREATE PROCEDURE sp_add_product_image(
   IN p_product_id INT,
-  IN p_image_url  TEXT,
+  IN p_image_url  TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_sort_order INT
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   INSERT INTO product_images (product_id, image_url, sort_order)
   VALUES (p_product_id, p_image_url, p_sort_order);
@@ -378,13 +396,14 @@ END $$
 DROP PROCEDURE IF EXISTS sp_get_products $$
 CREATE PROCEDURE sp_get_products(
   IN p_category_id   INT,
-  IN p_material_type VARCHAR(50),
+  IN p_material_type VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_min_price     DECIMAL(10,2),
   IN p_max_price     DECIMAL(10,2),
-  IN p_search        VARCHAR(255),
+  IN p_search        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_limit         INT,
   IN p_offset        INT
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT
     p.*,
@@ -431,17 +450,18 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_product $$
 CREATE PROCEDURE sp_update_product(
   IN p_id                INT,
-  IN p_name              VARCHAR(255),
+  IN p_name              VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_category_id       INT,
-  IN p_material_type     VARCHAR(50),
+  IN p_material_type     VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_price             DECIMAL(10,2),
   IN p_discount          DECIMAL(5,2),
   IN p_delivery_days     INT,
-  IN p_description       TEXT,
-  IN p_care_instructions TEXT,
+  IN p_description       TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_care_instructions TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_stock             INT,
   IN p_is_active         TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE products
   SET name = p_name, category_id = p_category_id,
@@ -480,16 +500,17 @@ DROP PROCEDURE IF EXISTS sp_create_order $$
 CREATE PROCEDURE sp_create_order(
   IN p_user_id          INT,
   IN p_total_amount     DECIMAL(10,2),
-  IN p_payment_method   VARCHAR(50),
-  IN p_shipping_name    VARCHAR(255),
-  IN p_shipping_phone   VARCHAR(20),
-  IN p_shipping_address TEXT,
-  IN p_shipping_city    VARCHAR(100),
-  IN p_shipping_state   VARCHAR(100),
-  IN p_shipping_pincode VARCHAR(10),
+  IN p_payment_method   VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_shipping_name    VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_shipping_phone   VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_shipping_address TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_shipping_city    VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_shipping_state   VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_shipping_pincode VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   -- JSON array: [{"product_id":1,"qty":2,"price":999.00}, ...]
   IN p_items_json       JSON
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   DECLARE i          INT DEFAULT 0;
   DECLARE item_cnt   INT;
@@ -580,6 +601,7 @@ CREATE PROCEDURE sp_update_order_status(
   IN p_id     INT,
   IN p_status ENUM('pending','confirmed','shipped','delivered','cancelled')
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE orders SET status = p_status WHERE id = p_id;
   -- Trigger fires automatically if status = 'cancelled'
@@ -594,10 +616,11 @@ DROP PROCEDURE IF EXISTS sp_update_order_payment $$
 CREATE PROCEDURE sp_update_order_payment(
   IN p_id               INT,
   IN p_status           ENUM('pending','confirmed','shipped','delivered','cancelled'),
-  IN p_payment_method   VARCHAR(50),
-  IN p_payment_id       VARCHAR(255),
-  IN p_razorpay_order_id VARCHAR(255)
+  IN p_payment_method   VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_payment_id       VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_razorpay_order_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE orders
   SET status = p_status, payment_method = p_payment_method,
@@ -612,12 +635,13 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_create_otp $$
 CREATE PROCEDURE sp_create_otp(
-  IN p_email      VARCHAR(255),
-  IN p_phone      VARCHAR(20),
-  IN p_otp        VARCHAR(10),
+  IN p_email      VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_phone      VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_otp        VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_expires_at DATETIME,
   IN p_type       ENUM('registration','login','password-reset')
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   IF p_email IS NOT NULL AND p_email != '' THEN
     DELETE FROM otps WHERE email = p_email AND type = p_type;
@@ -632,11 +656,12 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_get_otp $$
 CREATE PROCEDURE sp_get_otp(
-  IN p_email    VARCHAR(255),
-  IN p_phone    VARCHAR(20),
+  IN p_email    VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_phone    VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_type     ENUM('registration','login','password-reset'),
   IN p_verified TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT * FROM otps
   WHERE type = p_type AND verified = p_verified
@@ -678,7 +703,7 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_create_coupon $$
 CREATE PROCEDURE sp_create_coupon(
-  IN p_code           VARCHAR(50),
+  IN p_code           VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_discount_type  ENUM('percentage','fixed'),
   IN p_discount_value DECIMAL(10,2),
   IN p_max_uses       INT,
@@ -686,6 +711,7 @@ CREATE PROCEDURE sp_create_coupon(
   IN p_valid_to       DATE,
   IN p_is_active      TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   INSERT INTO coupons (code, discount_type, discount_value, max_uses,
                        valid_from, valid_to, is_active)
@@ -708,7 +734,8 @@ BEGIN
 END $$
 
 DROP PROCEDURE IF EXISTS sp_get_coupon_by_code $$
-CREATE PROCEDURE sp_get_coupon_by_code(IN p_code VARCHAR(50))
+CREATE PROCEDURE sp_get_coupon_by_code(IN p_code VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   SELECT * FROM coupons
   WHERE code = UPPER(p_code) AND is_active = 1
@@ -721,7 +748,7 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_coupon $$
 CREATE PROCEDURE sp_update_coupon(
   IN p_id             INT,
-  IN p_code           VARCHAR(50),
+  IN p_code           VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_discount_type  ENUM('percentage','fixed'),
   IN p_discount_value DECIMAL(10,2),
   IN p_max_uses       INT,
@@ -729,6 +756,7 @@ CREATE PROCEDURE sp_update_coupon(
   IN p_valid_to       DATE,
   IN p_is_active      TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE coupons
   SET code = UPPER(p_code), discount_type = p_discount_type,
@@ -747,7 +775,8 @@ BEGIN
 END $$
 
 DROP PROCEDURE IF EXISTS sp_increment_coupon_usage $$
-CREATE PROCEDURE sp_increment_coupon_usage(IN p_code VARCHAR(50))
+CREATE PROCEDURE sp_increment_coupon_usage(IN p_code VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE coupons SET used_count = used_count + 1 WHERE code = UPPER(p_code);
 END $$
@@ -759,13 +788,14 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_create_banner $$
 CREATE PROCEDURE sp_create_banner(
-  IN p_title         VARCHAR(255),
-  IN p_image_url     TEXT,
-  IN p_link          VARCHAR(500),
+  IN p_title         VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_image_url     TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_link          VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_position      ENUM('hero','sidebar','footer','category'),
   IN p_display_order INT,
   IN p_is_active     TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   INSERT INTO banners (title, image_url, link, position, display_order, is_active)
   VALUES (p_title, p_image_url, NULLIF(p_link,''), p_position, p_display_order, p_is_active);
@@ -773,7 +803,8 @@ BEGIN
 END $$
 
 DROP PROCEDURE IF EXISTS sp_get_banners $$
-CREATE PROCEDURE sp_get_banners(IN p_position VARCHAR(20))
+CREATE PROCEDURE sp_get_banners(IN p_position VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   IF p_position IS NULL OR p_position = '' THEN
     SELECT * FROM banners WHERE is_active = 1
@@ -799,13 +830,14 @@ END $$
 DROP PROCEDURE IF EXISTS sp_update_banner $$
 CREATE PROCEDURE sp_update_banner(
   IN p_id            INT,
-  IN p_title         VARCHAR(255),
-  IN p_image_url     TEXT,
-  IN p_link          VARCHAR(500),
+  IN p_title         VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_image_url     TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_link          VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   IN p_position      ENUM('hero','sidebar','footer','category'),
   IN p_display_order INT,
   IN p_is_active     TINYINT(1)
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   UPDATE banners
   SET title = p_title, image_url = p_image_url,
@@ -833,15 +865,16 @@ END $$
 
 DROP PROCEDURE IF EXISTS sp_upsert_site_settings $$
 CREATE PROCEDURE sp_upsert_site_settings(
-  IN p_logo             TEXT,
-  IN p_site_name        VARCHAR(255),
-  IN p_tagline          VARCHAR(255),
-  IN p_contact_email    VARCHAR(255),
-  IN p_contact_phone    VARCHAR(20),
-  IN p_social_instagram VARCHAR(255),
-  IN p_social_facebook  VARCHAR(255),
-  IN p_social_twitter   VARCHAR(255)
+  IN p_logo             TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_site_name        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_tagline          VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_contact_email    VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_contact_phone    VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_social_instagram VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_social_facebook  VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  IN p_social_twitter   VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 )
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 BEGIN
   IF EXISTS (SELECT 1 FROM site_settings LIMIT 1) THEN
     UPDATE site_settings
