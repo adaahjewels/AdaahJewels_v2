@@ -140,4 +140,27 @@ router.delete('/:id', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+// ── PATCH /api/products/:id/stock  (admin — update stock only) ────────────────
+router.patch('/:id/stock', authenticate, isAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { stock } = req.body;
+
+    if (stock === undefined || stock === null || isNaN(Number(stock))) {
+      return res.status(400).json({ message: 'stock value is required' });
+    }
+
+    const product = await productRepo.getProductById(id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    // Use delta = target - current to leverage sp_update_product_stock
+    const delta = Number(stock) - product.stock;
+    const newStock = await productRepo.updateStock(id, delta);
+
+    res.json({ id, stock: newStock });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update stock' });
+  }
+});
+
 export default router;

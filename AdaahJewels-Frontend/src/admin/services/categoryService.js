@@ -1,40 +1,38 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
-export const getCategories = async (filters = {}) => {
-  const result = await executeProcedure('SP_CategoryList', filters);
-  return Array.isArray(result) ? result : result?.data || [];
+export const getCategories = async () => {
+  const { data } = await axiosInstance.get('/categories/admin');
+  return Array.isArray(data) ? data : data?.data || [];
 };
 
 export const getCategoryById = async (categoryId) => {
-  const result = await executeProcedure('SP_CategoryGetById', { p_CategoryId: categoryId });
-  return Array.isArray(result) ? result[0] : result;
+  const { data } = await axiosInstance.get(`/categories/${categoryId}`);
+  return data;
 };
 
 export const createCategory = async (data) => {
-  return await executeProcedure('SP_CategoryInsert', {
-    p_CategoryName: data.name,
-    p_Slug: data.slug,
-    p_Description: data.description,
-    p_Image: data.image,
-    p_Status: data.status,
-    p_ParentId: data.parentId,
+  const { data: result } = await axiosInstance.post('/categories', {
+    name:        data.name,
+    description: data.description || null,
+    imageUrl:    data.image || data.imageUrl || null,
+    isActive:    data.status !== 0 && data.status !== false,
   });
+  return result;
 };
 
 export const updateCategory = async (categoryId, data) => {
-  return await executeProcedure('SP_CategoryUpdate', {
-    p_CategoryId: categoryId,
-    p_CategoryName: data.name,
-    p_Slug: data.slug,
-    p_Description: data.description,
-    p_Image: data.image,
-    p_Status: data.status,
-    p_ParentId: data.parentId,
+  const { data: result } = await axiosInstance.put(`/categories/${categoryId}`, {
+    name:        data.name,
+    description: data.description || null,
+    imageUrl:    data.image || data.imageUrl || null,
+    isActive:    data.status !== 0 && data.status !== false,
   });
+  return result;
 };
 
 export const deleteCategory = async (categoryId) => {
-  return await executeProcedure('SP_CategoryDelete', { p_CategoryId: categoryId });
+  const { data } = await axiosInstance.delete(`/categories/${categoryId}`);
+  return data;
 };
 
 export default { getCategories, getCategoryById, createCategory, updateCategory, deleteCategory };

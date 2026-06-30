@@ -1,30 +1,37 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
-export const getTestimonials = async (filters = {}) => {
-  return await executeProcedure('SP_TestimonialList', filters);
+export const getTestimonials = async () => {
+  try {
+    const { data } = await axiosInstance.get('/testimonials');
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 };
 
 export const createTestimonial = async (data) => {
-  return await executeProcedure('SP_TestimonialInsert', {
-    p_CustomerName: data.customerName,
-    p_ReviewText: data.reviewText,
-    p_Rating: data.rating,
-    p_Status: data.status,
+  const { data: result } = await axiosInstance.post('/testimonials', {
+    customerName: data.customerName,
+    reviewText:   data.reviewText,
+    rating:       data.rating,
+    isActive:     data.status !== 0 && data.status !== false,
   });
+  return result;
 };
 
 export const updateTestimonial = async (testimonialId, data) => {
-  return await executeProcedure('SP_TestimonialUpdate', {
-    p_TestimonialId: testimonialId,
-    p_CustomerName: data.customerName,
-    p_ReviewText: data.reviewText,
-    p_Rating: data.rating,
-    p_Status: data.status,
+  const { data: result } = await axiosInstance.put(`/testimonials/${testimonialId}`, {
+    customerName: data.customerName,
+    reviewText:   data.reviewText,
+    rating:       data.rating,
+    isActive:     data.status !== 0 && data.status !== false,
   });
+  return result;
 };
 
 export const deleteTestimonial = async (testimonialId) => {
-  return await executeProcedure('SP_TestimonialDelete', { p_TestimonialId: testimonialId });
+  const { data } = await axiosInstance.delete(`/testimonials/${testimonialId}`);
+  return data;
 };
 
 export default { getTestimonials, createTestimonial, updateTestimonial, deleteTestimonial };

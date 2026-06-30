@@ -1,22 +1,24 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
-export const getInventory = async (filters = {}) => {
-  return await executeProcedure('SP_InventoryList', filters);
+export const getInventory = async () => {
+  const { data } = await axiosInstance.get('/products');
+  return Array.isArray(data) ? data : [];
 };
 
 export const updateInventory = async (productId, quantity) => {
-  return await executeProcedure('SP_InventoryUpdate', {
-    p_ProductId: productId,
-    p_Quantity: quantity,
-  });
+  const { data } = await axiosInstance.patch(`/products/${productId}/stock`, { stock: quantity });
+  return data;
 };
 
 export const getLowStockProducts = async (threshold = 10) => {
-  return await executeProcedure('SP_LowStockProducts', { p_Threshold: threshold });
+  const { data } = await axiosInstance.get('/products');
+  const products = Array.isArray(data) ? data : [];
+  return products.filter(p => (p.stock ?? p.StockQuantity ?? 0) <= threshold);
 };
 
-export const getInventoryReport = async (filters = {}) => {
-  return await executeProcedure('SP_InventoryReport', filters);
+export const getInventoryReport = async () => {
+  const { data } = await axiosInstance.get('/products');
+  return Array.isArray(data) ? data : [];
 };
 
 export default { getInventory, updateInventory, getLowStockProducts, getInventoryReport };

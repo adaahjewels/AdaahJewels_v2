@@ -17,7 +17,7 @@
  */
 import { useRef, useState } from 'react';
 import { Upload, X, Link as LinkIcon, Loader } from 'lucide-react';
-import axiosInstance from '../api/axiosInstance';
+import axiosInstance from '../../api/axiosInstance';
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const PRESET     = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;

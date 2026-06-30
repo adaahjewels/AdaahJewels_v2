@@ -1,20 +1,18 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
 /**
  * Get all products with filters
  */
 export const getProducts = async (filters = {}) => {
   try {
-    const params = {
-      ...(filters.category && { p_Category: filters.category }),
-      ...(filters.search && { p_Search: filters.search }),
-      ...(filters.page && { p_Page: filters.page }),
-      ...(filters.limit && { p_Limit: filters.limit }),
-      ...(filters.status && { p_Status: filters.status }),
-    };
+    const params = {};
+    if (filters.category) params.categoryId = filters.category;
+    if (filters.search)   params.search     = filters.search;
+    if (filters.limit)    params.limit      = filters.limit;
+    if (filters.page)     params.offset     = ((filters.page - 1) * (filters.limit || 50));
 
-    const result = await executeProcedure('SP_ProductList', params);
-    return Array.isArray(result) ? result : result?.data || [];
+    const { data } = await axiosInstance.get('/products', { params });
+    return Array.isArray(data) ? data : data?.data || [];
   } catch (error) {
     console.error('Error fetching products:', error);
     throw error;
@@ -26,10 +24,8 @@ export const getProducts = async (filters = {}) => {
  */
 export const getProductById = async (productId) => {
   try {
-    const result = await executeProcedure('SP_ProductGetById', {
-      p_ProductId: productId,
-    });
-    return Array.isArray(result) ? result[0] : result;
+    const { data } = await axiosInstance.get(`/products/${productId}`);
+    return data;
   } catch (error) {
     console.error('Error fetching product:', error);
     throw error;
@@ -41,24 +37,19 @@ export const getProductById = async (productId) => {
  */
 export const createProduct = async (productData) => {
   try {
-    const params = {
-      p_ProductName: productData.name,
-      p_SKU: productData.sku,
-      p_CategoryId: productData.categoryId,
-      p_Description: productData.description,
-      p_Price: productData.price,
-      p_SalePrice: productData.salePrice,
-      p_StockQuantity: productData.stock,
-      p_Material: productData.material,
-      p_Weight: productData.weight,
-      p_Status: productData.status || 'active',
-      p_Featured: productData.featured ? 1 : 0,
-      p_BestSeller: productData.bestSeller ? 1 : 0,
-      p_Images: productData.images?.join(',') || '',
-    };
-
-    const result = await executeProcedure('SP_ProductInsert', params);
-    return result;
+    const { data } = await axiosInstance.post('/products', {
+      name:             productData.name,
+      categoryId:       productData.categoryId,
+      materialType:     productData.material || productData.materialType,
+      price:            productData.price,
+      discount:         productData.discount ?? 0,
+      deliveryDays:     productData.deliveryDays || 5,
+      description:      productData.description,
+      careInstructions: productData.careInstructions || null,
+      stock:            productData.stock ?? 0,
+      images:           productData.images || [],
+    });
+    return data;
   } catch (error) {
     console.error('Error creating product:', error);
     throw error;
@@ -70,25 +61,20 @@ export const createProduct = async (productData) => {
  */
 export const updateProduct = async (productId, productData) => {
   try {
-    const params = {
-      p_ProductId: productId,
-      p_ProductName: productData.name,
-      p_SKU: productData.sku,
-      p_CategoryId: productData.categoryId,
-      p_Description: productData.description,
-      p_Price: productData.price,
-      p_SalePrice: productData.salePrice,
-      p_StockQuantity: productData.stock,
-      p_Material: productData.material,
-      p_Weight: productData.weight,
-      p_Status: productData.status || 'active',
-      p_Featured: productData.featured ? 1 : 0,
-      p_BestSeller: productData.bestSeller ? 1 : 0,
-      p_Images: productData.images?.join(',') || '',
-    };
-
-    const result = await executeProcedure('SP_ProductUpdate', params);
-    return result;
+    const { data } = await axiosInstance.put(`/products/${productId}`, {
+      name:             productData.name,
+      categoryId:       productData.categoryId,
+      materialType:     productData.material || productData.materialType,
+      price:            productData.price,
+      discount:         productData.discount ?? 0,
+      deliveryDays:     productData.deliveryDays || 5,
+      description:      productData.description,
+      careInstructions: productData.careInstructions || null,
+      stock:            productData.stock ?? 0,
+      isActive:         productData.status !== 'inactive',
+      images:           productData.images || [],
+    });
+    return data;
   } catch (error) {
     console.error('Error updating product:', error);
     throw error;
@@ -100,10 +86,8 @@ export const updateProduct = async (productId, productData) => {
  */
 export const deleteProduct = async (productId) => {
   try {
-    const result = await executeProcedure('SP_ProductDelete', {
-      p_ProductId: productId,
-    });
-    return result;
+    const { data } = await axiosInstance.delete(`/products/${productId}`);
+    return data;
   } catch (error) {
     console.error('Error deleting product:', error);
     throw error;
@@ -128,11 +112,10 @@ export const bulkDeleteProducts = async (productIds) => {
  */
 export const updateProductStatus = async (productId, status) => {
   try {
-    const result = await executeProcedure('SP_ProductStatusUpdate', {
-      p_ProductId: productId,
-      p_Status: status,
+    const { data } = await axiosInstance.put(`/products/${productId}`, {
+      isActive: status === 'active',
     });
-    return result;
+    return data;
   } catch (error) {
     console.error('Error updating product status:', error);
     throw error;

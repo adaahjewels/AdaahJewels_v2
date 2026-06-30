@@ -18,6 +18,7 @@ import uploadRoutes from './routes/upload';
 import bannerRoutes from './routes/banners';
 import userRoutes from './routes/users';
 import dashboardRoutes from './routes/dashboard';
+import testimonialRoutes from './routes/testimonials';
 
 dotenv.config();
 
@@ -60,6 +61,7 @@ app.use('/api/upload',        uploadRoutes);
 app.use('/api/banners',      bannerRoutes);
 app.use('/api/users',        userRoutes);
 app.use('/api/dashboard',    dashboardRoutes);
+app.use('/api/testimonials', testimonialRoutes);
 
 app.get('/', (_req, res) => {
   res.json({ message: '🌸 Adaah Jewels API is running', version: '1.0.0' });

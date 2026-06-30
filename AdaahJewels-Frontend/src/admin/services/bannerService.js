@@ -1,32 +1,37 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
 export const getBanners = async () => {
-  return await executeProcedure('SP_BannerList', {});
+  const { data } = await axiosInstance.get('/banners/admin');
+  return Array.isArray(data) ? data : [];
 };
 
 export const createBanner = async (data) => {
-  return await executeProcedure('SP_BannerInsert', {
-    p_DesktopImage: data.desktopImage,
-    p_MobileImage: data.mobileImage,
-    p_RedirectUrl: data.redirectUrl,
-    p_SortOrder: data.sortOrder,
-    p_Status: data.status,
+  const { data: result } = await axiosInstance.post('/banners', {
+    title:        data.title,
+    imageUrl:     data.imageUrl,
+    link:         data.link || null,
+    position:     data.position || 'hero',
+    displayOrder: data.displayOrder ?? 0,
+    isActive:     data.isActive !== false,
   });
+  return result;
 };
 
 export const updateBanner = async (bannerId, data) => {
-  return await executeProcedure('SP_BannerUpdate', {
-    p_BannerId: bannerId,
-    p_DesktopImage: data.desktopImage,
-    p_MobileImage: data.mobileImage,
-    p_RedirectUrl: data.redirectUrl,
-    p_SortOrder: data.sortOrder,
-    p_Status: data.status,
+  const { data: result } = await axiosInstance.put(`/banners/${bannerId}`, {
+    title:        data.title,
+    imageUrl:     data.imageUrl,
+    link:         data.link || null,
+    position:     data.position || 'hero',
+    displayOrder: data.displayOrder ?? 0,
+    isActive:     data.isActive !== false,
   });
+  return result;
 };
 
 export const deleteBanner = async (bannerId) => {
-  return await executeProcedure('SP_BannerDelete', { p_BannerId: bannerId });
+  const { data } = await axiosInstance.delete(`/banners/${bannerId}`);
+  return data;
 };
 
 export default { getBanners, createBanner, updateBanner, deleteBanner };

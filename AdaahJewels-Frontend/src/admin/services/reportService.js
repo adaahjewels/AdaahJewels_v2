@@ -1,23 +1,30 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
 export const getSalesReport = async (filters = {}) => {
-  return await executeProcedure('SP_SalesReport', filters);
+  const { data } = await axiosInstance.get('/dashboard/summary');
+  return data ?? {};
 };
 
 export const getRevenueReport = async (filters = {}) => {
-  return await executeProcedure('SP_RevenueReport', filters);
+  const { data } = await axiosInstance.get('/dashboard/revenue-chart', {
+    params: { timeRange: filters.timeRange || 'month' },
+  });
+  return Array.isArray(data) ? data : [];
 };
 
-export const getProductReport = async (filters = {}) => {
-  return await executeProcedure('SP_ProductReport', filters);
+export const getProductReport = async () => {
+  const { data } = await axiosInstance.get('/dashboard/top-products');
+  return Array.isArray(data) ? data : [];
 };
 
-export const getCustomerReport = async (filters = {}) => {
-  return await executeProcedure('SP_CustomerReport', filters);
+export const getCustomerReport = async () => {
+  const { data } = await axiosInstance.get('/users');
+  return Array.isArray(data) ? data : [];
 };
 
-export const getInventoryReport = async (filters = {}) => {
-  return await executeProcedure('SP_InventoryReport', filters);
+export const getInventoryReport = async () => {
+  const { data } = await axiosInstance.get('/products');
+  return Array.isArray(data) ? data : [];
 };
 
 export default {

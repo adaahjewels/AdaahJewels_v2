@@ -1,31 +1,27 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
 export const getOrders = async (filters = {}) => {
-  const result = await executeProcedure('SP_OrderList', {
-    p_Status: filters.status || null,
-    p_StartDate: filters.startDate || null,
-    p_EndDate: filters.endDate || null,
-    p_Page: filters.page || 1,
-    p_Limit: filters.limit || 20,
-  });
-  return Array.isArray(result) ? result : [];
+  const { data } = await axiosInstance.get('/orders');
+  let orders = Array.isArray(data) ? data : [];
+  if (filters.status) {
+    orders = orders.filter(o => o.status === filters.status);
+  }
+  return orders;
 };
 
 export const getOrderDetails = async (orderId) => {
-  const result = await executeProcedure('SP_OrderDetails', { p_OrderId: orderId });
-  return Array.isArray(result) ? result[0] : result;
+  const { data } = await axiosInstance.get(`/orders/${orderId}`);
+  return data;
 };
 
 export const updateOrderStatus = async (orderId, status) => {
-  return await executeProcedure('SP_OrderStatusUpdate', {
-    p_OrderId: orderId,
-    p_Status: status,
-  });
+  const { data } = await axiosInstance.patch(`/orders/${orderId}/status`, { status });
+  return data;
 };
 
 export const getOrderItems = async (orderId) => {
-  const result = await executeProcedure('SP_OrderItems', { p_OrderId: orderId });
-  return Array.isArray(result) ? result : [];
+  const { data } = await axiosInstance.get(`/orders/${orderId}`);
+  return Array.isArray(data?.items) ? data.items : [];
 };
 
 export default { getOrders, getOrderDetails, updateOrderStatus, getOrderItems };

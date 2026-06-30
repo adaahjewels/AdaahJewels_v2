@@ -1,27 +1,24 @@
-import { executeProcedure } from '../api/dynamicApi';
+import axiosInstance from '../api/axiosInstance';
 
 export const getSettings = async () => {
-  const result = await executeProcedure('SP_WebsiteSettingsGet', {});
-  return Array.isArray(result) ? result[0] : result;
+  const { data } = await axiosInstance.get('/settings');
+  return data;
 };
 
 export const updateSettings = async (settings) => {
-  return await executeProcedure('SP_WebsiteSettingsUpdate', {
-    p_WebsiteName: settings.websiteName,
-    p_Logo: settings.logo,
-    p_Favicon: settings.favicon,
-    p_Email: settings.email,
-    p_Phone: settings.phone,
-    p_Address: settings.address,
-    p_FacebookUrl: settings.facebookUrl,
-    p_TwitterUrl: settings.twitterUrl,
-    p_InstagramUrl: settings.instagramUrl,
-    p_LinkedInUrl: settings.linkedInUrl,
-    p_FooterContent: settings.footerContent,
-    p_SEOTitle: settings.seoTitle,
-    p_SEODescription: settings.seoDescription,
-    p_SEOKeywords: settings.seoKeywords,
+  const { data } = await axiosInstance.put('/settings', {
+    logo:         settings.logo,
+    siteName:     settings.websiteName || settings.siteName,
+    tagline:      settings.tagline     || null,
+    contactEmail: settings.email       || settings.contactEmail,
+    contactPhone: settings.phone       || settings.contactPhone,
+    socialMedia: {
+      instagram: settings.instagramUrl || settings.socialInstagram,
+      facebook:  settings.facebookUrl  || settings.socialFacebook,
+      twitter:   settings.twitterUrl   || settings.socialTwitter,
+    },
   });
+  return data;
 };
 
 export default { getSettings, updateSettings };
